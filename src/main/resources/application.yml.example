@@ -16,3 +16,9 @@ jwt:
   secret: your_jwt_secret_key_here_at_least_32_characters_long
   expiration: 86400000  # 24 hours in milliseconds
 
+stripe:
+  api-key: sk_test_YOUR_STRIPE_TEST_SECRET_KEY  # Get from https://dashboard.stripe.com/test/apikeys
+  webhook-secret: whsec_YOUR_WEBHOOK_SECRET  # Optional: Get from Stripe webhook settings
+  currency: usd
+  success-url: http://localhost:8080/payment/success
+  cancel-url: http://localhost:8080/payment/cancel

@@ -40,7 +40,8 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/products/**",
                                 "/api/categories/**",
-                                "/api/cart/**"
+                                "/api/cart/**",
+                                "/actuator/health"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

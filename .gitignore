@@ -4,9 +4,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### Markdown Files ###
+### Documentation ###
 *.md
 
+### Application Configuration ###
 ### Application Configuration ###
 src/main/resources/application.yml
 src/main/resources/application.properties
