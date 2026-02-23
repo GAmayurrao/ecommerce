@@ -1,0 +1,38 @@
+# ============================================================
+# TEST CONFIGURATION
+# Overrides main application.yml during test execution.
+# Uses H2 in-memory database so tests run in CI without
+# needing a real PostgreSQL instance.
+# ============================================================
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop       # Fresh schema for every test run
+    show-sql: false
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  # Disable Flyway/Liquibase if present
+  flyway:
+    enabled: false
+
+server:
+  port: 8080
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+
+stripe:
+  api-key: sk_test_dummy_key_for_ci
+  webhook-secret: whsec_dummy_for_ci
+  currency: usd
+  success-url: http://localhost:8080/payment/success
+  cancel-url: http://localhost:8080/payment/cancel
+

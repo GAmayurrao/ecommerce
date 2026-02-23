@@ -13,6 +13,14 @@ src/main/resources/application.yml
 src/main/resources/application.properties
 .env
 
+### Maven Build Output ###
+target/
+
+### Documentation and Local Scripts (not needed in repo) ###
+*.txt
+*.ps1
+*.sql
+
 ### STS ###
 .apt_generated
 .classpath

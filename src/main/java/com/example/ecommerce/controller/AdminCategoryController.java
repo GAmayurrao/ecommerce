@@ -47,17 +47,5 @@ public class AdminCategoryController {
         List<CategoryResponse> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
     }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long id) {
-        CategoryResponse response = categoryService.getCategoryById(id);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/{id}/subcategories")
-    public ResponseEntity<List<CategoryResponse>> getSubcategories(@PathVariable Long id) {
-        List<CategoryResponse> subcategories = categoryService.getSubcategories(id);
-        return ResponseEntity.ok(subcategories);
-    }
 }
 
