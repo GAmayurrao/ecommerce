@@ -191,22 +191,18 @@ jobs:
       - name: Install Snyk CLI
         run: npm install -g snyk
 
-      # ----------------------------------------------------------
-      # STEP 5: Run Snyk to scan for vulnerabilities
-      # ----------------------------------------------------------
-      # `snyk test` resolves the Maven dependency tree and checks
-      # every dependency against the Snyk vulnerability DB.
-      #
-      # --sarif-file-output=snyk.sarif writes results to a file
-      # in the current workspace (runner filesystem) so the next
-      # step can upload it to the GitHub Security tab.
-      #
-      # continue-on-error: true means the pipeline stays green
-      # even when vulnerabilities are found — we want to REPORT
-      # them, not block the pipeline (for learning purposes).
-      # ----------------------------------------------------------
+      # Authenticate Snyk CLI using the token secret
+      - name: Authenticate Snyk
+        run: snyk auth $SNYK_TOKEN
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      # Run the scan. continue-on-error means the step is marked
+      # as passed even if Snyk finds vulnerabilities (exit code 1).
+      # The SARIF file is written to the runner workspace directly.
       - name: Run Snyk vulnerability scan
-        run: snyk test --severity-threshold=high --sarif-file-output=snyk.sarif || true
+        run: snyk test --severity-threshold=high --sarif-file-output=snyk.sarif
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
