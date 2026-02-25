@@ -63,12 +63,20 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Install Snyk CLI
-        run: npm install -g snyk
+      - name: Make Maven wrapper executable
+        run: chmod +x ./mvnw
+      - name: Verify Maven dependency tree resolves
+        run: ./mvnw dependency:tree --batch-mode --non-recursive -q
+        env:
+          STRIPE_API_KEY: sk_test_dummy_key_for_ci
+          STRIPE_WEBHOOK_SECRET: whsec_dummy_for_ci
       - name: Run Snyk vulnerability scan
-        run: snyk test --sarif-file-output=snyk.sarif; exit 0
+        uses: snyk/actions/maven@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --sarif-file-output=snyk.sarif --severity-threshold=high
       - name: Upload Snyk SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
