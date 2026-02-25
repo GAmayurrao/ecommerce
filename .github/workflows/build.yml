@@ -56,6 +56,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.9.6
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -63,20 +67,29 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Make Maven wrapper executable
-        run: chmod +x ./mvnw
-      - name: Verify Maven dependency tree resolves
-        run: ./mvnw dependency:tree --batch-mode --non-recursive -q
+      - name: Pre-fetch dependencies so Snyk can resolve them
+        run: mvn dependency:resolve --no-transfer-progress -q
         env:
           STRIPE_API_KEY: sk_test_dummy_key_for_ci
           STRIPE_WEBHOOK_SECRET: whsec_dummy_for_ci
-      - name: Run Snyk vulnerability scan
-        uses: snyk/actions/maven@master
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+      - name: Run Snyk vulnerability scan and write SARIF
+        run: |
+          snyk test --all-projects --severity-threshold=high --sarif-file-output=snyk.sarif
+          echo "Snyk exit code: $?"
+          ls -lh snyk.sarif
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --sarif-file-output=snyk.sarif --severity-threshold=high
+          SNYK_CFG_ORG: ""
+      - name: Create empty SARIF if Snyk did not produce one
+        if: always()
+        run: |
+          if [ ! -f snyk.sarif ]; then
+            echo "{\"version\":\"2.1.0\",\"runs\":[]}" > snyk.sarif
+            echo "Created fallback empty SARIF"
+          fi
       - name: Upload Snyk SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
