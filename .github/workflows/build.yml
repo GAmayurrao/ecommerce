@@ -176,37 +176,56 @@ jobs:
             ${{ runner.os }}-maven-
 
       # ----------------------------------------------------------
-      # STEP 4: Run Snyk to scan for vulnerabilities
+      # STEP 4: Install Snyk CLI natively on the runner
       # ----------------------------------------------------------
-      # `snyk/actions/maven` is the official Snyk action for Maven
-      # projects. It:
-      #   • Resolves the full dependency tree via Maven
-      #   • Checks every dependency against the Snyk vulnerability DB
-      #   • Fails the step if vulnerabilities at or above the
-      #     --severity-threshold are found
-      #   • Uploads results as a SARIF report to GitHub Security tab
+      # We install Snyk CLI directly via npm instead of using the
+      # snyk/actions/maven Docker action.
       #
-      # --severity-threshold=high → only fail on HIGH or CRITICAL CVEs
-      # (change to "critical" if you only want to block on CVSS ≥ 9)
+      # WHY: The Docker-based action writes snyk.sarif INSIDE the
+      # container filesystem, so it never appears on the runner and
+      # the upload step always fails with "Path does not exist".
+      # Installing the CLI natively means the file is written
+      # directly into the runner workspace — exactly where the
+      # upload step expects it.
       # ----------------------------------------------------------
-      - name: Run Snyk vulnerability scan
-        uses: snyk/actions/maven@master
-        continue-on-error: true   # report findings but don't block the pipeline
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          # --sarif-file-output=snyk.sarif tells Snyk to write results
-          # to a file so the next step can upload it to GitHub Security tab
-          args: --severity-threshold=high --all-projects --sarif-file-output=snyk.sarif
+      - name: Install Snyk CLI
+        run: npm install -g snyk
 
       # ----------------------------------------------------------
-      # STEP 5: Upload Snyk SARIF results to GitHub Security tab
+      # STEP 5: Run Snyk to scan for vulnerabilities
+      # ----------------------------------------------------------
+      # `snyk test` resolves the Maven dependency tree and checks
+      # every dependency against the Snyk vulnerability DB.
+      #
+      # --sarif-file-output=snyk.sarif writes results to a file
+      # in the current workspace (runner filesystem) so the next
+      # step can upload it to the GitHub Security tab.
+      #
+      # continue-on-error: true means the pipeline stays green
+      # even when vulnerabilities are found — we want to REPORT
+      # them, not block the pipeline (for learning purposes).
+      # ----------------------------------------------------------
+      - name: Run Snyk vulnerability scan
+        run: snyk test --severity-threshold=high --sarif-file-output=snyk.sarif || true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      # ----------------------------------------------------------
+      # STEP 6: Verify snyk.sarif was created (debug aid)
+      # Prints the file size so you can confirm it exists.
+      # Remove this step once everything is working.
+      # ----------------------------------------------------------
+      - name: Confirm snyk.sarif exists
+        run: ls -lh snyk.sarif
+
+      # ----------------------------------------------------------
+      # STEP 7: Upload Snyk SARIF results to GitHub Security tab
       # After this runs, go to:
       #   GitHub → Security → Code scanning alerts
       # to view every CVE Snyk found, with severity and fix advice.
       # ----------------------------------------------------------
       - name: Upload Snyk SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
-        if: always()              # upload even if the scan step failed
+        if: always()
         with:
           sarif_file: snyk.sarif
