@@ -66,8 +66,7 @@ jobs:
       - name: Install Snyk CLI
         run: npm install -g snyk
       - name: Run Snyk vulnerability scan
-        run: snyk test --severity-threshold=high --sarif-file-output=snyk.sarif
-        continue-on-error: true
+        run: snyk test --sarif-file-output=snyk.sarif; exit 0
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       - name: Upload Snyk SARIF to GitHub Security tab
