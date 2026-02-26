@@ -1,0 +1,26 @@
+# Build artefacts
+target/
+*.jar
+*.war
+# Version control
+.git/
+.gitignore
+.gitattributes
+# CI / GitHub Actions
+.github/
+# IDE files
+.idea/
+*.iml
+*.iws
+# Documentation and local scripts (not needed in image)
+*.md
+*.txt
+*.ps1
+*.sql
+# Environment files (secrets must be injected at runtime)
+.env
+.env.*
+src/main/resources/application.yml
+src/main/resources/application.properties
+# Maven wrapper JAR
+.mvn/wrapper/maven-wrapper.jar
